@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  # --- SERVICIO 1: BASE DE DATOS POSTGRESQL (Optimizado para evitar problemas de permisos) ---
+  # --- SERVICIO 1: BASE DE DATOS POSTGRESQL (Clave actualizada) ---
   db:
     image: postgres:16-alpine
     container_name: customer_churn_db
@@ -13,7 +11,6 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Usamos el volumen aislado manejado por Docker para los datos crudos de Postgres
       - pgdata:/var/lib/postgresql/data
 
   # --- SERVICIO 2: ENTORNO DE TRABAJO DATA SCIENCE ---
