@@ -1,0 +1,29 @@
+# --- DATA SCIENCE DATA ----
+01.data/*
+!01.data/.gitkeep
+
+# --- MODELOS ENTRENADOS ---
+01.models/*
+!01.models/.gitkeep
+
+# --- CONFIGURACIONES Y CREDENCIALES ---
+.env
+.env.*
+*.local
+
+# --- JUPYTER NOTEBOOKS TEMPORALES ---
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+__pycache__/
+*/__pycache__/*
+*.pyc
+
+# --- VIRTUAL ENVIRONMENTS (por si acaso) ---
+.venv/
+env/
+venv/
+.conda/
+
+# --- VS CODE & SISTEMA ---
+.vscode/
+.DS_Store

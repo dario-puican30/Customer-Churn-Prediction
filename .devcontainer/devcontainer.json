@@ -1,0 +1,33 @@
+{
+    // Nombre del entorno DevContainer (solo informativo)
+    "name": "Customer Churn DS Environment",
+
+    // Archivo docker-compose que define los servicios (Jupyter + PostgreSQL)
+    "dockerComposeFile": "../docker-compose.yml",
+
+    // Servicio principal donde VS Code se conectará (tu entorno de desarrollo)
+    "service": "app",
+
+    // Carpeta dentro del contenedor donde VS Code abrirá el workspace
+    "workspaceFolder": "/workspace",
+
+    // Personalización de VS Code dentro del contenedor
+    "customizations": {
+        "vscode": {
+            // Extensiones que se instalarán automáticamente al abrir el DevContainer
+            "extensions": [
+                "ms-python.python",            // Python
+                "ms-toolsai.jupyter",          // Jupyter Notebooks
+                "ms-python.vscode-pylance",    // Autocompletado y análisis de Python
+                "ms-azuretools.vscode-docker", // Soporte Docker
+                "ms-toolsai.datawrangler",     // Limpieza y análisis de datos
+                "eamodio.gitlens",             // Git avanzado
+                "oderwat.indent-rainbow",      // Colores para indentación
+                "mechatroner.rainbow-csv",     // CSV mejorado
+                "mtxr.sqltools",               // SQL Tools
+                "redhat.vscode-yaml"           // YAML
+            ]
+        }
+    },
+    "remoteUser": "root"
+}

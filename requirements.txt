@@ -1,0 +1,24 @@
+# --- CORE PYTHON ---
+pandas
+numpy
+scikit-learn
+joblib
+
+# --- MODELOS ---
+xgboost
+
+# --- VISUALIZACIÓN (solo notebooks) ---
+matplotlib
+seaborn
+plotly
+
+# --- BASE DE DATOS ---
+SQLAlchemy
+psycopg2-binary
+
+# --- PRODUCCIÓN / INTERFAZ ---
+streamlit
+
+# --- UTILIDADES ---
+python-dotenv
+
