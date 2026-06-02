@@ -22,3 +22,5 @@ streamlit
 # --- UTILIDADES ---
 python-dotenv
 
+# --- ENTORNO DE DESARROLLO (VS CODE) ---
+ipykernel
