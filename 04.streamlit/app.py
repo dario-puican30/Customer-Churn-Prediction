@@ -2,15 +2,60 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import sqlalchemy as sa
+import plotly.express as px
 import joblib
 import os
 
-st.set_page_config(page_title="Churn Analytics Dashboard", page_icon="📊", layout="wide")
+# 1. Configuración de la página con Layout Ancho y Estilo Ejecutivo
+st.set_page_config(page_title="Corporate Churn Intelligence", page_icon="📈", layout="wide")
 
-st.title("Customer Churn Analytics & Prediction Platform 📊")
-st.write("Ecosistema portátil de Data Science impulsado por Docker, PostgreSQL y XGBoost.")
+# Inyección de CSS Personalizado para diseño premium
+st.markdown("""
+    <style>
+        @import url('https://googleapis.com');
+        html, body, [class*="css"] {
+            font-family: 'Inter', sans-serif;
+        }
+        .main-title {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1E293B;
+            margin-bottom: 2px;
+        }
+        .sub-title {
+            font-size: 14px;
+            color: #64748B;
+            margin-bottom: 25px;
+        }
+        .kpi-box {
+            background-color: #F8FAFC;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #3B82F6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+        .kpi-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748B;
+            font-weight: 600;
+        }
+        .kpi-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0F172A;
+            margin-top: 5px;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-# --- CADENA DE CONEXIÓN Y MODELO ---
+# Encabezado Principal
+st.markdown('<div class="main-title">Customer Intelligence Hub</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Análisis de Datos Interactivo desde PostgreSQL e Inferencia Acelerada por GPU</div>', unsafe_allow_html=True)
+
+# Conexiones de Infraestructura Docker
 DATABASE_URL = "postgresql://ds_user:chiara01!@db:5432/customer_churn"
 MODEL_PATH = "01.models/pipeline_xgboost_telco.pkl"
 
@@ -27,51 +72,121 @@ def load_ml_pipeline():
 engine = get_db_engine()
 pipeline = load_ml_pipeline()
 
-st.header("1. Monitoreo de Clientes en Riesgo Crítico (PostgreSQL)")
+# -------------------------------------------------------------------
+# SIDEBAR CONTROL (INTERACTIVIDAD AVANZADA)
+# -------------------------------------------------------------------
+st.sidebar.header("🎯 Filtros Globales de Negocio")
+st.sidebar.write("Modifica el entorno para segmentar las vistas analíticas en tiempo real.")
 
 try:
-    query = "SELECT * FROM view_high_risk_revenue_customers LIMIT 10;"
-    df_high_risk = pd.read_sql(query, con=engine)
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric(label="Clientes Críticos Listados", value=len(df_high_risk))
-    with col2:
-        st.metric(label="Cargo Mensual Máximo Detectado", value=f"${df_high_risk['monthly_charges'].max():.2f}")
-    with col3:
-        st.metric(label="Permanencia Promedio (Meses)", value=f"{df_high_risk['tenure'].mean():.1f} meses")
-        
-    st.subheader("Top 10 Clientes con Mayor Impacto de Fuga")
-    st.dataframe(df_high_risk, use_container_width=True)
-except Exception as e:
-    st.error(f"No se pudo conectar a la base de datos PostgreSQL: {e}")
+    with engine.connect() as conn:
+        contratos_disponibles = pd.read_sql("SELECT DISTINCT contract FROM customers;", con=conn)["contract"].tolist()
+except:
+    contratos_disponibles = ["Month-to-month", "One year", "Two year"]
 
-st.markdown("---")
-st.header("2. Simulador de Riesgo de Abandono (Inferencia en Vivo)")
+contract_filter = st.sidebar.multiselect(
+    "Filtrar por Esquema Contractual:",
+    options=contratos_disponibles,
+    default=contratos_disponibles
+)
+
+# -------------------------------------------------------------------
+# SECCIÓN 1: PANEL ANALÍTICO INTERACTIVO (POSTGRESQL + PLOTLY)
+# -------------------------------------------------------------------
+st.subheader("📊 Consola de Control de Clientes")
+
+try:
+    if not contract_filter:
+        st.warning("Selecciona al menos un tipo de contrato en el panel izquierdo.")
+    else:
+        query = sa.text("SELECT * FROM customers WHERE contract IN :contratos")
+        df_filtered = pd.read_sql(query, con=engine, params={"contratos": tuple(contract_filter)})
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.markdown(f'<div class="kpi-box"><div class="kpi-title">Clientes Analizados</div><div class="kpi-value">{len(df_filtered):,}</div></div>', unsafe_allow_html=True)
+        with col2:
+            tasa_churn = (df_filtered['churn'] == 'Yes').mean() * 100 if len(df_filtered) > 0 else 0.0
+            st.markdown(f'<div class="kpi-box" style="border-left-color: #EF4444;"><div class="kpi-title">Tasa de Churn Global</div><div class="kpi-value">{tasa_churn:.1f}%</div></div>', unsafe_allow_html=True)
+        with col3:
+            ingreso_total = df_filtered['monthly_charges'].sum() if len(df_filtered) > 0 else 0.0
+            st.markdown(f'<div class="kpi-box" style="border-left-color: #10B981;"><div class="kpi-title">Ingreso Mensual Total</div><div class="kpi-value">${ingreso_total:,.0f}</div></div>', unsafe_allow_html=True)
+        with col4:
+            permanencia_promedio = df_filtered['tenure'].mean() if len(df_filtered) > 0 else 0.0
+            st.markdown(f'<div class="kpi-box" style="border-left-color: #F59E0B;"><div class="kpi-title">Permanencia Promedio</div><div class="kpi-value">{permanencia_promedio:.1f} Meses</div></div>', unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        col_g1, col_g2 = st.columns(2)
+        
+        with col_g1:
+            st.markdown("**Distribución de Cargos Mensuales por Estatus de Churn**")
+            fig_hist = px.histogram(
+                df_filtered, 
+                x="monthly_charges", 
+                color="churn", 
+                barmode="overlay",
+                marginal="box",
+                color_discrete_map={"No": "#3B82F6", "Yes": "#EF4444"},
+                labels={"monthly_charges": "Cargos Mensuales ($)", "churn": "¿Se Fugó?"},
+                template="plotly_white"
+            )
+            fig_hist.update_layout(margin=dict(l=20, r=20, t=20, b=20), height=350)
+            st.plotly_chart(fig_hist, use_container_width=True)
+
+        with col_g2:
+            st.markdown("**Concentración de Clientes por Método de Pago**")
+            fig_pie = px.pie(
+                df_filtered, 
+                names="payment_method", 
+                color="payment_method", 
+                # --- PALETA CORPORATIVA EN TONOS DE AZUL ---
+                color_discrete_sequence=px.colors.sequential.Blues_r, 
+                hole=0.4,
+                template="plotly_white"
+            )
+            fig_pie.update_layout(
+                margin=dict(l=20, r=20, t=20, b=20), 
+                height=350,
+                legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+            
+        with st.expander("🔍 Explorar Datos Crutos Segmentados", expanded=False):
+            st.dataframe(df_filtered.head(100), use_container_width=True)
+
+except Exception as e:
+    st.error(f"Error al estructurar los gráficos: {e}")
+
+# -------------------------------------------------------------------
+# SECCIÓN 2: SIMULADOR DE INFERENCIA EN VIVO (XGBOOST)
+# -------------------------------------------------------------------
+st.markdown("<br><hr>", unsafe_allow_html=True)
+st.subheader("🔮 Simulador de Retención de Clientes")
 
 if pipeline is None:
-    st.warning("⚠️ El pipeline predictivo 'pipeline_xgboost_telco.pkl' aún no está exportado en la carpeta 01.models. Por favor, ejecuta tu Notebook 4 dentro del contenedor para generarlo.")
+    st.warning("⚠️ Artefacto del modelo no detectado en '01.models/pipeline_xgboost_telco.pkl'.")
 else:
-    st.write("Modifica las variables operativas del cliente para calcular instantáneamente su probabilidad de Churn:")
-    
-    col_f1, col_f2, col_f3, col_f4 = st.columns(4)
-    
-    with col_f1:
-        gender = st.selectbox("Género", ["Male", "Female"])
-        senior_citizen = st.selectbox("Adulto Mayor", [0, 1])
-        partner = st.selectbox("Tiene Pareja", ["Yes", "No"])
-    with col_f2:
-        dependents = st.selectbox("Tiene Dependientes", ["Yes", "No"])
-        tenure = st.slider("Meses de Permanencia (Tenure)", min_value=1, max_value=72, value=12)
-        phone_service = st.selectbox("Servicio Telefónico", ["Yes", "No"])
-    with col_f3:
-        multiple_lines = st.selectbox("Líneas Múltiples", ["No phone service", "No", "Yes"])
-        internet_service = st.selectbox("Servicio de Internet", ["DSL", "Fiber optic", "No"])
-        contract = st.selectbox("Tipo de Contrato", ["Month-to-month", "One year", "Two year"])
-    with col_f4:
-        paperless_billing = st.selectbox("Facturación Electrónica", ["Yes", "No"])
-        monthly_charges = st.number_input("Cargo Mensual ($)", min_value=10.0, max_value=150.0, value=75.0)
-        total_charges = st.number_input("Cargos Totales Acumulados ($)", min_value=10.0, max_value=8000.0, value=900.0)
+    with st.container(border=True):
+        st.markdown("**Ingreso Manual de Parámetros**")
+        col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+        
+        with col_f1:
+            gender = st.selectbox("Género", ["Male", "Female"])
+            senior_citizen = st.selectbox("Adulto Mayor", [0, 1], format_func=lambda x: "Sí (1)" if x == 1 else "No (0)")
+            partner = st.selectbox("Tiene Pareja", ["Yes", "No"])
+        with col_f2:
+            dependents = st.selectbox("Tiene Dependientes", ["Yes", "No"])
+            tenure = st.slider("Permanencia (Meses)", min_value=1, max_value=72, value=12)
+            phone_service = st.selectbox("Servicio de Voz", ["Yes", "No"])
+        with col_f3:
+            multiple_lines = st.selectbox("Líneas Telefónicas", ["No phone service", "No", "Yes"])
+            internet_service = st.selectbox("Tecnología Internet", ["DSL", "Fiber optic", "No"])
+            contract = st.selectbox("Esquema Contractual", ["Month-to-month", "One year", "Two year"])
+        with col_f4:
+            paperless_billing = st.selectbox("Factura Electrónica", ["Yes", "No"])
+            monthly_charges = st.number_input("Factura Mensual ($)", min_value=10.0, max_value=150.0, value=75.0)
+            total_charges = st.number_input("Factura Acumulada ($)", min_value=10.0, max_value=8000.0, value=900.0)
 
     input_data = pd.DataFrame([{
         "gender": gender, "SeniorCitizen": senior_citizen, "Partner": partner, "Dependents": dependents,
@@ -82,17 +197,20 @@ else:
         "MonthlyCharges": monthly_charges, "TotalCharges": total_charges
     }])
 
-    if st.button("🔮 Calcular Riesgo de Churn"):
-        # --- CORRECCIÓN CRÍTICA DE TIPOS DE DATOS ---
-        # Extraemos la probabilidad de Churn (columna 1) y la convertimos a float nativo de Python
+    col_btn, _ = st.columns(2)
+    with col_btn:
+        btn_action = st.button("🚀 Evaluar Probabilidad de Fuga", use_container_width=True)
+
+    if btn_action:
         prob_array = pipeline.predict_proba(input_data)
-        probabilidad_porcentaje = float(prob_array[0, 1]) * 100
-        probabilidad_progreso = float(prob_array[0, 1])
+        prob_val = float(prob_array[0, 1])
+        probabilidad_porcentaje = round(prob_val * 100, 1)
         
-        st.markdown("### Resultado del Análisis de Riesgo:")
+        st.markdown("<br>", unsafe_allow_html=True)
+        
         if probabilidad_porcentaje > 50.0:
-            st.error(f"🚨 **ALTO RIESGO DE FUGA:** Este cliente tiene un **{probabilidad_porcentaje:.1f}%** de probabilidad de abandonar la empresa.")
-            st.progress(probabilidad_progreso)
+            st.error(f"🚨 **Diagnóstico de Riesgo de Fuga Alto:** El cliente tiene una probabilidad de abandono del {probabilidad_porcentaje}%. Requiere una acción comercial inmediata.")
+            st.progress(prob_val)
         else:
-            st.success(f"✅ **CLIENTE ESTABLE:** La probabilidad de abandono es baja (**{probabilidad_porcentaje:.1f}%**).")
-            st.progress(probabilidad_progreso)
+            st.success(f"✅ **Diagnóstico de Cuenta Estable:** La probabilidad de abandono es controlada ({probabilidad_porcentaje}%). La cuenta es saludable.")
+            st.progress(prob_val)
