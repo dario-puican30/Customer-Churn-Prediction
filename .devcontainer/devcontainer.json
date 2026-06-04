@@ -16,16 +16,18 @@
         "vscode": {
             // Extensiones que se instalarán automáticamente al abrir el DevContainer
             "extensions": [
-                "ms-python.python",            // Python
-                "ms-toolsai.jupyter",          // Jupyter Notebooks
-                "ms-python.vscode-pylance",    // Autocompletado y análisis de Python
-                "ms-azuretools.vscode-docker", // Soporte Docker
-                "ms-toolsai.datawrangler",     // Limpieza y análisis de datos
-                "eamodio.gitlens",             // Git avanzado
-                "oderwat.indent-rainbow",      // Colores para indentación
-                "mechatroner.rainbow-csv",     // CSV mejorado
-                "mtxr.sqltools",               // SQL Tools
-                "redhat.vscode-yaml"           // YAML
+                "ms-python.python",             // Python
+                "ms-toolsai.jupyter",           // Jupyter Notebooks
+                "ms-python.vscode-pylance",     // Autocompletado y análisis de Python
+                "ms-azuretools.vscode-docker",  // Soporte Docker
+                "ms-toolsai.datawrangler",      // Limpieza y análisis de datos
+                "eamodio.gitlens",              // Git avanzado
+                "oderwat.indent-rainbow",       // Colores para indentación
+                "mechatroner.rainbow-csv",      // CSV mejorado
+                "mtxr.sqltools",                // SQL Tools
+                "redhat.vscode-yaml",           // YAML
+                "esbenp.prettier-vscode",       // Formateo de código
+                "adpyke.codesnap"               // Capturas de código
             ]
         }
     },
