@@ -55,8 +55,12 @@ st.markdown("""
 st.markdown('<div class="main-title">Customer Intelligence Hub</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Análisis de Datos Interactivo desde PostgreSQL e Inferencia Acelerada por GPU</div>', unsafe_allow_html=True)
 
-# Conexiones de Infraestructura Docker
-DATABASE_URL = "postgresql://ds_user:chiara01!@db:5432/customer_churn"
+# 🧠 Conexiones Híbridas (Nube / Docker Local)
+# Lee el secreto de la nube si existe; de lo contrario, usa tu Docker local por defecto
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "postgresql://ds_user:chiara01!@db:5432/customer_churn"
+)
 MODEL_PATH = "01.models/pipeline_xgboost_telco.pkl"
 
 @st.cache_resource
