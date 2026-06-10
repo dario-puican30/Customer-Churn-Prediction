@@ -1,5 +1,5 @@
 # ==============================================================================
-# ENTORNO DE PRODUCCIÓN / INFERENCIA (MÍNIMO ESENCIAL)
+# ENTORNO DE PRODUCCIÓN - STREAMLIT CLOUD
 # ==============================================================================
 
 # --- CORE PROCESSING ---
@@ -13,7 +13,7 @@ xgboost==3.2.0
 
 # --- DATABASE PIPELINE ---
 SQLAlchemy==2.0.50
-psycopg2==2.9.12         # Compilación nativa C estable en Linux
+psycopg2-binary==2.9.12         # En la nube USAMOS BINARY para evitar errores de compilación
 
 # --- CORE INTERFACE ---
 streamlit==1.58.0
