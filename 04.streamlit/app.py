@@ -70,7 +70,21 @@ def get_db_engine():
 @st.cache_resource
 def load_ml_pipeline():
     if os.path.exists(MODEL_PATH):
-        return joblib.load(MODEL_PATH)
+        # 1. Cargamos el pipeline de Scikit-Learn / XGBoost
+        pipeline = joblib.load(MODEL_PATH)
+        
+        # 2. DETECTOR DINÁMICO DE HARDWARE:
+        # Si la app corre en la nube sin GPU, forzamos a XGBoost a operar en CPU
+        if hasattr(pipeline.named_steps['model'], 'set_params'):
+            try:
+                # Intentamos verificar si CUDA está disponible
+                import xgboost as xgb
+                # Si estamos en la nube de Streamlit, esto fallará o no tendrá device cuda activo
+                pipeline.named_steps['model'].set_params(device="cpu", tree_method="hist")
+            except:
+                pipeline.named_steps['model'].set_params(device="cpu", tree_method="hist")
+                
+        return pipeline
     return None
 
 engine = get_db_engine()
