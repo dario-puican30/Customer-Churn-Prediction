@@ -5,13 +5,20 @@ services:
     container_name: customer_churn_db
     restart: "no"
     environment:
-      POSTGRES_USER: ds_user
-      POSTGRES_PASSWORD: chiara01!
-      POSTGRES_DB: customer_churn
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data_net
 
   # --- SERVICIO 2: ENTORNO DE TRABAJO DATA SCIENCE ---
   app:
@@ -19,9 +26,9 @@ services:
     container_name: customer_churn_app
     restart: "no"
     volumes:
-      - .:/workspace
+      - .:/workspace:cached # Optimización de caché de montura para Ubuntu
     environment:
-      - DATABASE_URL=postgresql://ds_user:chiara01!@db:5432/customer_churn
+      - DATABASE_URL=${DATABASE_URL}
     deploy:
       resources:
         reservations:
@@ -32,7 +39,10 @@ services:
     stdin_open: true
     tty: true
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - data_net
 
   # --- SERVICIO 3: INTERFAZ DE STREAMLIT ---
   streamlit:
@@ -40,12 +50,33 @@ services:
     container_name: customer_churn_streamlit
     restart: "no"
     volumes:
-      - .:/workspace
+      - .:/workspace:cached
     ports:
       - "8501:8501"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     command: streamlit run 04.streamlit/app.py --server.port=8501 --server.address=0.0.0.0
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - data_net
+      - web_net
+
+# --- DEFINICIÓN DE REDES AISLADAS ---
+networks:
+  data_net:
+    driver: bridge
+    internal: true # Bloquea el acceso externo, comunicación 100% interna
+  web_net:
+    driver: bridge
 
 volumes:
   pgdata:
