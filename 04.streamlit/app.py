@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import scipy.stats as stats
 import sqlalchemy as sa
 import plotly.express as px
 import joblib
@@ -11,44 +12,44 @@ st.set_page_config(page_title="Corporate Churn Intelligence", page_icon="📈", 
 
 # Inyección de CSS Personalizado para diseño premium
 st.markdown("""
-    <style>
-        @import url('https://googleapis.com');
-        html, body, [class*="css"] {
-            font-family: 'Inter', sans-serif;
-        }
-        .main-title {
-            font-size: 32px;
-            font-weight: 600;
-            color: #1E293B;
-            margin-bottom: 2px;
-        }
-        .sub-title {
-            font-size: 14px;
-            color: #64748B;
-            margin-bottom: 25px;
-        }
-        .kpi-box {
-            background-color: #F8FAFC;
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 5px solid #3B82F6;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            margin-bottom: 15px;
-        }
-        .kpi-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #64748B;
-            font-weight: 600;
-        }
-        .kpi-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #0F172A;
-            margin-top: 5px;
-        }
-    </style>
+<style>
+@import url('https://googleapis.com');
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+.main-title {
+    font-size: 32px;
+    font-weight: 600;
+    color: #1E293B;
+    margin-bottom: 2px;
+}
+.sub-title {
+    font-size: 14px;
+    color: #64748B;
+    margin-bottom: 25px;
+}
+.kpi-box {
+    background-color: #F8FAFC;
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 5px solid #3B82F6;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+}
+.kpi-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748B;
+    font-weight: 600;
+}
+.kpi-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #0F172A;
+    margin-top: 5px;
+}
+</style>
 """, unsafe_allow_html=True)
 
 # Encabezado Principal
@@ -56,12 +57,11 @@ st.markdown('<div class="main-title">Customer Intelligence Hub</div>', unsafe_al
 st.markdown('<div class="sub-title">Análisis de Datos Interactivo desde PostgreSQL e Inferencia Acelerada por GPU</div>', unsafe_allow_html=True)
 
 # 🧠 Conexiones Híbridas (Nube / Docker Local)
-# Lee el secreto de la nube si existe; de lo contrario, usa tu Docker local por defecto
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
     "postgresql://ds_user:chiara01!@db:5432/customer_churn"
 )
-MODEL_PATH = "01.models/pipeline_xgboost_telco.pkl"
+MODEL_PATH = "01.models/xgboost_telco.pkl" # Actualizado al nombre de exportación limpio
 
 @st.cache_resource
 def get_db_engine():
@@ -74,7 +74,7 @@ def load_ml_pipeline():
     return None
 
 engine = get_db_engine()
-pipeline = load_ml_pipeline()
+pipeline_produccion = load_ml_pipeline()
 
 # -------------------------------------------------------------------
 # SIDEBAR CONTROL (INTERACTIVIDAD AVANZADA)
@@ -144,7 +144,6 @@ try:
                 df_filtered, 
                 names="payment_method", 
                 color="payment_method", 
-                # --- PALETA CORPORATIVA EN TONOS DE AZUL ---
                 color_discrete_sequence=px.colors.sequential.Blues_r, 
                 hole=0.4,
                 template="plotly_white"
@@ -155,12 +154,12 @@ try:
                 legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
             )
             st.plotly_chart(fig_pie, use_container_width=True)
-            
+         
         with st.expander("🔍 Explorar Datos Crutos Segmentados", expanded=False):
             st.dataframe(df_filtered.head(100), use_container_width=True)
 
 except Exception as e:
-    st.error(f"Error al estructurar los gráficos: {e}")
+    st.error(f"Error al estructurar los gráficos o consultar la base de datos: {e}")
 
 # -------------------------------------------------------------------
 # SECCIÓN 2: SIMULADOR DE INFERENCIA EN VIVO (XGBOOST)
@@ -168,8 +167,8 @@ except Exception as e:
 st.markdown("<br><hr>", unsafe_allow_html=True)
 st.subheader("🔮 Simulador de Retención de Clientes")
 
-if pipeline is None:
-    st.warning("⚠️ Artefacto del modelo no detectado en '01.models/pipeline_xgboost_telco.pkl'.")
+if pipeline_produccion is None:
+    st.warning(f"⚠️ Artefacto del modelo no detectado en '{MODEL_PATH}'.")
 else:
     with st.container(border=True):
         st.markdown("**Ingreso Manual de Parámetros**")
@@ -192,29 +191,47 @@ else:
             monthly_charges = st.number_input("Factura Mensual ($)", min_value=10.0, max_value=150.0, value=75.0)
             total_charges = st.number_input("Factura Acumulada ($)", min_value=10.0, max_value=8000.0, value=900.0)
 
-    input_data = pd.DataFrame([{
-        "gender": gender, "SeniorCitizen": senior_citizen, "Partner": partner, "Dependents": dependents,
-        "tenure": tenure, "PhoneService": phone_service, "MultipleLines": multiple_lines,
-        "InternetService": internet_service, "OnlineSecurity": "No", "OnlineBackup": "No",
-        "DeviceProtection": "No", "TechSupport": "No", "StreamingTV": "No", "StreamingMovies": "No",
-        "Contract": contract, "PaperlessBilling": paperless_billing, "PaymentMethod": "Electronic check",
-        "MonthlyCharges": monthly_charges, "TotalCharges": total_charges
-    }])
+        # Sincronización Estricta de Nombres de Columnas Originales (Evita el ValueError de XGBoost)
+        input_data = pd.DataFrame([{
+            "gender": gender, 
+            "SeniorCitizen": int(senior_citizen), 
+            "Partner": partner,
+            "Dependents": dependents,
+            "tenure": int(tenure), 
+            "PhoneService": phone_service, 
+            "MultipleLines": multiple_lines,
+            "InternetService": internet_service, 
+            "OnlineSecurity": "No", 
+            "OnlineBackup": "No",
+            "DeviceProtection": "No", 
+            "TechSupport": "No", 
+            "StreamingTV": "No", 
+            "StreamingMovies": "No",
+            "Contract": contract, 
+            "PaperlessBilling": paperless_billing, 
+            "PaymentMethod": "Electronic check", # Valor base por defecto para el simulador
+            "MonthlyCharges": float(monthly_charges), 
+            "TotalCharges": float(total_charges)
+        }])
 
-    col_btn, _ = st.columns(2)
-    with col_btn:
-        btn_action = st.button("🚀 Evaluar Probabilidad de Fuga", use_container_width=True)
+        col_btn, _ = st.columns(2)
+        with col_btn:
+            btn_action = st.button("🚀 Evaluar Probabilidad de Fuga", use_container_width=True)
 
-    if btn_action:
-        prob_array = pipeline.predict_proba(input_data)
-        prob_val = float(prob_array[0, 1])
-        probabilidad_porcentaje = round(prob_val * 100, 1)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        if probabilidad_porcentaje > 50.0:
-            st.error(f"🚨 **Diagnóstico de Riesgo de Fuga Alto:** El cliente tiene una probabilidad de abandono del {probabilidad_porcentaje}%. Requiere una acción comercial inmediata.")
-            st.progress(prob_val)
-        else:
-            st.success(f"✅ **Diagnóstico de Cuenta Estable:** La probabilidad de abandono es controlada ({probabilidad_porcentaje}%). La cuenta es saludable.")
-            st.progress(prob_val)
+        if btn_action:
+            try:
+                # Inferencia nativa acelerada
+                prob_array = pipeline_produccion.predict_proba(input_data)
+                prob_val = float(prob_array[0, 1])
+                probabilidad_porcentaje = round(prob_val * 100, 1)
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                if probabilidad_porcentaje > 50.0:
+                    st.error(f"🚨 **Diagnóstico de Riesgo de Fuga Alto:** El cliente tiene una probabilidad de abandono del {probabilidad_porcentaje}%. Requiere una acción comercial inmediata.")
+                    st.progress(prob_val)
+                else:
+                    st.success(f"✅ Diagnóstico de Cuenta Estable: La probabilidad de abandono es controlada ({probabilidad_porcentaje}%). La cuenta es saludable.")
+                    st.progress(prob_val)
+            except Exception as e:
+                    st.error(f"❌ Error durante el proceso de inferencia: {str(e)}")

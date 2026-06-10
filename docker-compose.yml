@@ -3,7 +3,7 @@ services:
   db:
     image: postgres:16-alpine
     container_name: customer_churn_db
-    restart: always
+    restart: "no"
     environment:
       POSTGRES_USER: ds_user
       POSTGRES_PASSWORD: chiara01!
@@ -17,7 +17,7 @@ services:
   app:
     build: .
     container_name: customer_churn_app
-    restart: always
+    restart: "no"
     volumes:
       - .:/workspace
     environment:
@@ -38,7 +38,7 @@ services:
   streamlit:
     build: .
     container_name: customer_churn_streamlit
-    restart: always
+    restart: "no"
     volumes:
       - .:/workspace
     ports:
