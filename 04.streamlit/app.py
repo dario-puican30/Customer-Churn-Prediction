@@ -57,11 +57,8 @@ st.markdown('<div class="main-title">Customer Intelligence Hub</div>', unsafe_al
 st.markdown('<div class="sub-title">Análisis de Datos Interactivo desde PostgreSQL e Inferencia Acelerada por GPU</div>', unsafe_allow_html=True)
 
 # 🧠 Conexiones Híbridas (Nube / Docker Local)
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql://ds_user:chiara01!@db:5432/customer_churn"
-)
-MODEL_PATH = "01.models/xgboost_telco.pkl" # Actualizado al nombre de exportación limpio
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/customer_churn")
+MODEL_PATH = "01.models/pipeline_xgboost_telco.pkl"
 
 @st.cache_resource
 def get_db_engine():

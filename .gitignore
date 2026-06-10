@@ -1,11 +1,11 @@
 # --- DATA SCIENCE DATA ----
 01.data/*
 !01.data/.gitkeep
-!01.models/pipeline_xgboost_telco.pkl  # 👈 ¡Fuerza a Git a subir el modelo!
 
 # --- MODELOS ENTRENADOS ---
 01.models/*
 !01.models/.gitkeep
+!01.models/pipeline_xgboost_telco.pkl  # 👈 ¡Fuerza a Git a subir el modelo!
 
 # --- CONFIGURACIONES Y CREDENCIALES ---
 .env
