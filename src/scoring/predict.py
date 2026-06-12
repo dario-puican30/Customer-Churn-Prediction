@@ -21,8 +21,17 @@ def predict(df: pd.DataFrame, model) -> pd.DataFrame:
         df_scoring = df_scoring.drop(columns=["Churn"])
         
     print("Generando probabilidades en lote...")
-    predicciones = model.predict(df_scoring)
-    probabilidades = model.predict_proba(df_scoring)[:, 1]
+    
+    # ====================================================================
+    # Desacoplar el preprocesador en CPU del estimador en GPU
+    # ====================================================================
+    # 1. El ColumnTransformer procesa las columnas en la CPU y devuelve una matriz limpia
+    X_scoring_proc = model.named_steps["preprocessor"].transform(df_scoring)
+    
+    # 2. El modelo de XGBoost consume el arreglo numérico directo en los núcleos CUDA
+    predicciones = model.named_steps["model"].predict(X_scoring_proc)
+    probabilidades = model.named_steps["model"].predict_proba(X_scoring_proc)[:, 1]
+    # ====================================================================
     
     df_result = df.copy()
     df_result["Prediccion_Churn"] = predicciones
