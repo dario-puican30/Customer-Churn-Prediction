@@ -1,0 +1,50 @@
+{
+  // Nombre del entorno DevContainer (solo informativo)
+  "name": "Customer Churn DS Environment",
+
+  // Archivo docker-compose que define los servicios (Jupyter + PostgreSQL)
+  "dockerComposeFile": "../docker-compose.yml",
+
+  // Servicio principal donde VS Code se conectará (tu entorno de desarrollo)
+  "service": "app",
+
+  // Carpeta dentro del contenedor donde VS Code abrirá el workspace
+  "workspaceFolder": "/workspace",
+
+  // Personalización de VS Code dentro del contenedor
+  "customizations": {
+    "vscode": {
+      // Extensiones que se instalarán automáticamente al abrir el DevContainer
+      "extensions": [
+        "ms-python.python", // Python
+        "ms-toolsai.jupyter", // Jupyter Notebooks
+        "ms-python.vscode-pylance", // Autocompletado y análisis de Python
+        "ms-azuretools.vscode-docker", // Soporte Docker
+        "ms-toolsai.datawrangler", // Limpieza y análisis de datos
+        "eamodio.gitlens", // Git avanzado
+        "oderwat.indent-rainbow", // Colores para indentación
+        "mechatroner.rainbow-csv", // CSV mejorado
+        "cweijan.vscode-database-client2", // Database Client SQL
+        "redhat.vscode-yaml", // YAML
+        "esbenp.prettier-vscode", // Formateo de código
+        "adpyke.codesnap" // Capturas de código
+      ],
+      // Configuración por defecto para forzar el formateo limpio al guardar
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+        // CONFIGURACIÓN DE GITLENS INTEGRADA (SIN RUIDO VISUAL)
+        "gitlens.blame.line.enabled": false,
+        "gitlens.hovers.enabled": true,
+        "gitlens.hovers.annotations.details": "commit",
+        "gitlens.views.repositories.files.layout": "tree",
+        "gitlens.statusBar.enabled": true,
+        "gitlens.statusBar.alignment": "left",
+        "gitlens.graph.minimap.enabled": false,
+        "gitlens.graph.style": "glowing"
+      }
+    }
+  },
+  "remoteUser": "root"
+}
