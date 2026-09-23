@@ -1,0 +1,48 @@
+# ==============================================================================
+# --- INFRAESTRUCTURA DE DATOS Y MODELOS (Estrategia por Extensión para Git LFS) ---
+# ==============================================================================
+
+# 1. Ignoramos de forma global todos los formatos de datos pesados en cualquier directorio
+*.csv
+*.xlsx
+*.parquet
+*.jsonl
+
+# 2. Excepciones explícitas de Datos (Los archivos específicos que SÍ se deben subir)
+!01.data/processed/telco_churn_clean.csv
+!01.data/processed/telco_churn_model_ready.csv
+!01.data/raw/telco_churn.csv
+!01.data/scoring/clientes_nuevos.csv
+!01.data/scoring/scoring_resultado.csv
+
+# 3. Excepciones explícitas de Modelos (Forzamos la subida para que Git LFS los capture)
+!01.models/pipeline_xgboost_telco.pkl
+
+# 4. Asegurar la persistencia de las carpetas vacías en GitHub mediante Gitkeeps
+!**/.gitkeep
+
+# ==============================================================================
+# --- CREDENCIALES, ENTORNOS Y CONFIGURACIONES (Bloqueo Estándar) ---
+# ==============================================================================
+
+.env
+.env.*
+*.local
+
+# --- JUPYTER NOTEBOOKS TEMPORALES ---
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+__pycache__/
+*/__pycache__/*
+*.pyc
+
+# --- ENTIORNOS VIRTUALES (Aislamiento Total) ---
+.venv/
+env/
+venv/
+.conda/
+
+# --- VS CODE & SISTEMA ---
+.vscode/
+.DS_Store
+
